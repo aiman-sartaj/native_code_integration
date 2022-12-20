@@ -2,10 +2,15 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  runApp(MyApp());
+}
 
 class MyApp extends StatefulWidget {
   @override
@@ -19,11 +24,52 @@ class _MyAppState extends State<MyApp> {
   bool status = false;
   String permissionRequestedKey = 'bluetooth_permission_requested';
 
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  final AndroidInitializationSettings androidInitializationSettings =
+      AndroidInitializationSettings('app_icon');
+
   @override
   void initState() {
     super.initState();
+
+    InitializationSettings initializationSettings =
+        InitializationSettings(android: androidInitializationSettings);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
     check();
-    scheduleNotification();
+    _scheduleNotification();
+  }
+
+  Future<void> _scheduleNotification() async {
+    try {
+      await enableBluetoothAutomatically();
+
+      print("enableBluetoothAutomatically method invoked");
+    } on PlatformException catch (e) {
+      print(e.message);
+    } catch (e) {
+      print("$e error at enableBluetoothAutomatically");
+    }
+
+    var time = const Time(17, 49, 0);
+    var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
+      '1',
+      'bluetooth_schedular',
+      priority: Priority.high,
+      ticker: 'ticker',
+    );
+    var platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.showDailyAtTime(
+      0,
+      'Notification',
+      'Bluetooth has been enabled',
+      time,
+      platformChannelSpecifics,
+      payload: 'item x',
+    );
   }
 
   TimeOfDay targetTime = TimeOfDay(hour: 16, minute: 11);
@@ -83,6 +129,7 @@ class _MyAppState extends State<MyApp> {
                 child: const Text('Enable Bluetooth'),
                 onPressed: () async {
                   //  enableBluetooth();
+
                   check();
                   if (permissionGranted == true) {
                     // // Request Bluetooth permissions from the user
@@ -91,14 +138,7 @@ class _MyAppState extends State<MyApp> {
                     // print("permission granted: $granted");
 
                     //    if (granted) {
-                    try {
-                      enableBluetoothAutomatically();
-                      print("enableBluetoothAutomatically method invoked");
-                    } on PlatformException catch (e) {
-                      print(e.message);
-                    } catch (e) {
-                      print("$e error at enableBluetoothAutomatically");
-                    }
+                    _scheduleNotification();
                   } else {
                     try {
                       enableBluetooth();
