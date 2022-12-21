@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "367041836698",
+    "project_id": "bluetooth-a79b7",
+    "storage_bucket": "bluetooth-a79b7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:367041836698:android:e7a594f9dc2584369ad123",
+        "android_client_info": {
+          "package_name": "com.example.native_code_integration_demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "367041836698-r6jc11nb1j6l1lhlbbb0mb3kcuqtgpdt.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKki7RyfWPaKyGEJvTNfFQOWL56ZMqCks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "367041836698-r6jc11nb1j6l1lhlbbb0mb3kcuqtgpdt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
