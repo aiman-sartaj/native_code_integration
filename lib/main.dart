@@ -27,7 +27,7 @@ class _MyAppState extends State<MyApp> {
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   final AndroidInitializationSettings androidInitializationSettings =
-      AndroidInitializationSettings('app_icon');
+      const AndroidInitializationSettings('app_icon');
 
   @override
   void initState() {
@@ -37,21 +37,21 @@ class _MyAppState extends State<MyApp> {
         InitializationSettings(android: androidInitializationSettings);
     flutterLocalNotificationsPlugin.initialize(initializationSettings);
     check();
-    _scheduleNotification();
+    scheduleBluetoothEnable();
   }
 
   Future<void> _scheduleNotification() async {
-    try {
-      await enableBluetoothAutomatically();
+    // try {
+    //   await enableBluetoothAutomatically();
 
-      print("enableBluetoothAutomatically method invoked");
-    } on PlatformException catch (e) {
-      print(e.message);
-    } catch (e) {
-      print("$e error at enableBluetoothAutomatically");
-    }
+    //   print("enableBluetoothAutomatically method invoked");
+    // } on PlatformException catch (e) {
+    //   print(e.message);
+    // } catch (e) {
+    //   print("$e error at enableBluetoothAutomatically");
+    // }
 
-    var time = const Time(17, 49, 0);
+    var time = const Time(14, 17, 0);
     var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
       '1',
       'bluetooth_schedular',
@@ -62,26 +62,37 @@ class _MyAppState extends State<MyApp> {
       android: androidPlatformChannelSpecifics,
     );
 
-    await flutterLocalNotificationsPlugin.showDailyAtTime(
+    await flutterLocalNotificationsPlugin.show(
       0,
       'Notification',
       'Bluetooth has been enabled',
-      time,
       platformChannelSpecifics,
       payload: 'item x',
     );
   }
 
-  TimeOfDay targetTime = TimeOfDay(hour: 16, minute: 11);
+  TimeOfDay targetTime = const TimeOfDay(hour: 14, minute: 32);
+  TimeOfDay offTime = const TimeOfDay(hour: 14, minute: 33);
 
-  void scheduleNotification() {
+  void scheduleBluetoothEnable() async {
     DateTime now = DateTime.now();
     DateTime scheduledTime = DateTime(
         now.year, now.month, now.day, targetTime.hour, targetTime.minute);
     if (scheduledTime.isBefore(now)) {
-      scheduledTime = scheduledTime.add(Duration(days: 1));
+      scheduledTime = scheduledTime.add(const Duration(days: 1));
     }
+
+    DateTime offTimeSchedule =
+        DateTime(now.year, now.month, now.day, offTime.hour, offTime.minute);
+    if (offTimeSchedule.isBefore(now)) {
+      offTimeSchedule = offTimeSchedule.add(const Duration(days: 1));
+    }
+
     Timer(scheduledTime.difference(now), enableBluetoothAutomatically);
+    Timer(offTimeSchedule.difference(now), disableBluetooth);
+    await Future.delayed(
+        Duration(seconds: scheduledTime.difference(now).inSeconds));
+    _scheduleNotification();
   }
 
   check() async {
@@ -112,6 +123,17 @@ class _MyAppState extends State<MyApp> {
   enableBluetooth() async {
     await platform.invokeMethod('enableBluetooth');
     grantPermission();
+  }
+
+  disableBluetooth() async {
+    try {
+      await platform.invokeMethod('disableBluetooth');
+      print("method invoked");
+    } on PlatformException catch (e) {
+      print(e.message);
+    } catch (e) {
+      print(" granted");
+    }
   }
 
   @override
