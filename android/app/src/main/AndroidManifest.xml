@@ -4,15 +4,12 @@
 <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-  <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+ <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
-        android:label="native_code_integration_demo"
+        android:label="Auto Bluetooth"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
 <!-- 

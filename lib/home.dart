@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class Home extends StatefulWidget {
@@ -18,8 +19,8 @@ class _HomeState extends State<Home> {
   bool? permissionGranted;
   bool status = false;
   String permissionRequestedKey = 'bluetooth_permission_requested';
-  final _timeS = TextEditingController();
-  final _timeE = TextEditingController();
+  TimeOfDay onTime = const TimeOfDay(hour: 12, minute: 00);
+  TimeOfDay offTime = const TimeOfDay(hour: 12, minute: 00);
 
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -36,18 +37,7 @@ class _HomeState extends State<Home> {
     check();
   }
 
-  Future<void> _scheduleNotification() async {
-    // try {
-    //   await enableBluetoothAutomatically();
-
-    //   print("enableBluetoothAutomatically method invoked");
-    // } on PlatformException catch (e) {
-    //   print(e.message);
-    // } catch (e) {
-    //   print("$e error at enableBluetoothAutomatically");
-    // }
-
-    var time = const Time(14, 17, 0);
+  Future<void> _scheduleNotification(bool bluetoothOn) async {
     var androidPlatformChannelSpecifics = const AndroidNotificationDetails(
       '1',
       'bluetooth_schedular',
@@ -61,16 +51,13 @@ class _HomeState extends State<Home> {
     await flutterLocalNotificationsPlugin.show(
       0,
       'Notification',
-      'Bluetooth has been enabled',
+      bluetoothOn
+          ? 'Bluetooth has been enabled'
+          : 'Bluetooth has been disabled',
       platformChannelSpecifics,
       payload: 'item x',
     );
   }
-
-  // TimeOfDay onTime = const TimeOfDay(hour: 17, minute: 46);
-  // TimeOfDay offTime = const TimeOfDay(hour: 17, minute: 47);
-  TimeOfDay? onTime;
-  TimeOfDay? offTime;
 
   void scheduleBluetoothEnable(TimeOfDay onTime, TimeOfDay offTime) async {
     DateTime now = DateTime.now();
@@ -86,11 +73,15 @@ class _HomeState extends State<Home> {
       offTimeSchedule = offTimeSchedule.add(const Duration(days: 1));
     }
 
-    Timer(scheduledTime.difference(now), enableBluetoothAutomatically);
+    Timer(scheduledTime.difference(now), enableBluetooth);
     Timer(offTimeSchedule.difference(now), disableBluetooth);
     await Future.delayed(
         Duration(seconds: scheduledTime.difference(now).inSeconds));
-    _scheduleNotification();
+    _scheduleNotification(true);
+
+    await Future.delayed(
+        Duration(seconds: offTimeSchedule.difference(now).inSeconds));
+    _scheduleNotification(false);
   }
 
   check() async {
@@ -101,14 +92,18 @@ class _HomeState extends State<Home> {
       permissionGranted = status;
     });
     print("status: $status");
-  }
 
-  enableBluetoothAutomatically() async {
-    await platform.invokeMethod('enableBluetoothAutomatically');
+    if (status != true) {
+      enableBluetooth();
+    }
   }
 
   enableBluetooth() async {
-    await platform.invokeMethod('enableBluetooth');
+    if (status) {
+      await platform.invokeMethod('enableBluetoothAutomatically');
+    } else {
+      await platform.invokeMethod('enableBluetooth');
+    }
   }
 
   disableBluetooth() async {
@@ -133,13 +128,11 @@ class _HomeState extends State<Home> {
     if (startTime != null) {
       setState(() {
         onTime = startTime;
-        _timeS.text = "${startTime.hour}:${startTime.minute}";
       });
     }
     if (endTime != null) {
       setState(() {
         offTime = endTime;
-        _timeE.text = "${endTime.hour}:${endTime.minute}";
       });
     }
   }
@@ -176,7 +169,7 @@ class _HomeState extends State<Home> {
                     child: Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        _timeS.text,
+                        onTime.format(context),
                         style: TextStyle(fontSize: 14),
                       ),
                     ),
@@ -198,7 +191,7 @@ class _HomeState extends State<Home> {
                     child: Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        _timeE.text,
+                        offTime.format(context),
                         style: TextStyle(fontSize: 14),
                       ),
                     ),
@@ -206,8 +199,9 @@ class _HomeState extends State<Home> {
                 ],
               ),
               ElevatedButton(
-                  onPressed: () {
-                    scheduleBluetoothEnable(onTime!, offTime!);
+                  onPressed: () async {
+                    scheduleBluetoothEnable(onTime, offTime);
+                    await platform.invokeMethod("showToast");
                   },
                   child: Text("Save"))
               // ElevatedButton(
